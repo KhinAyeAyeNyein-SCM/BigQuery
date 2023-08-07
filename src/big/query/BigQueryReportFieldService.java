@@ -18,9 +18,12 @@ public class BigQueryReportFieldService {
         for (String tableName : tableList) {
             StringBuilder query = new StringBuilder();
             List<String> fieldList = new ArrayList<String>();
-            query.append("SELECT ColumnName, DataTypeName FROM sys_tablecolumns ");
-            query.append("Where TableName = ");
-            query.append("'").append(tableName).append("'");
+            query.append("SELECT ");
+            query.append("ColumnName, DataTypeName, IsRequired ");
+            query.append("FROM sys_tablecolumns ");
+            query.append("Where TableName = 'windy-skyline-394706.Testing.");
+            query.append("").append(tableName).append("'");
+            System.out.println(query.toString());
             ResultSet result = statement.executeQuery(query.toString());
             while (result.next()) {
                 if (!result.getString("ColumnName").equals("_PARTITIONDATE")) {
@@ -28,8 +31,10 @@ public class BigQueryReportFieldService {
                 }
             }
             reportFieldList.put(tableName, fieldList);
+            System.out.println("CSV import for " + tableName + "is Completed! ");
         }
         System.out.println("Field Name Generate Completed!----");
+        System.out.println("_____________________________________");
         return reportFieldList;
     }
 }

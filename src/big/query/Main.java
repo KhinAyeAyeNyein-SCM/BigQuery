@@ -11,7 +11,7 @@ public class Main {
         Connection conn =  jdbcConnection.getConnection();
         List<String> tableList = BigQueryReportAvailableListService.getAvailableReports(conn);
         Map<String, List<String>> fieldList = BigQueryReportFieldService.getReportFields(conn, tableList);
-        List<List<String[]>> rowList = jdbcConnection.buildSql(fieldList);
-        BigQueryReportService.outputReport(fieldList, rowList);
+        Map<String, String> query = jdbcConnection.buildSql(fieldList);
+        BigQueryReportService.outputReport(conn, fieldList, query);
     }
 }

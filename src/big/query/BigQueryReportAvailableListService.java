@@ -16,11 +16,13 @@ public class BigQueryReportAvailableListService {
             ResultSet rsGetTables = dmd.getTables(null, null, "%", null);
             while (rsGetTables.next()) {
                 availableReportList.add(rsGetTables.getString("TABLE_NAME"));
+                System.out.println(rsGetTables.getString("TABLE_NAME"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         System.out.println("Table Generate Complete!");
+        System.out.println("____________________________________");
         return availableReportList;
     }
 }

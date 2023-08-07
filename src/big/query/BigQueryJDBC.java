@@ -2,14 +2,12 @@ package big.query;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Scanner;
 
 public class BigQueryJDBC {
     public Connection getConnection() {
@@ -17,7 +15,6 @@ public class BigQueryJDBC {
         try {
             Class.forName("cdata.jdbc.googlebigquery.GoogleBigQueryDriver");
 
-            
             prop.setProperty("InitiateOAuth", "REFRESH");
             prop.setProperty("OAuthClientId",
                     "666879781482-a3ihmaj2b8ngkjqudot8mm0phqjiq2fr.apps.googleusercontent.com");
@@ -27,46 +24,37 @@ public class BigQueryJDBC {
             prop.setProperty("OAuthRefreshToken",
                     "1//04E7uXbvCziUpCgYIARAAGAQSNwF-L9IrEZ-aZa_zCf81sFBm4oyQ8TLhR2V6eSJxS8GiURUO0798PsjxaPBPYJLvoGnsG0Ai5_4");
             prop.setProperty("OAuthSettingsLocation", "US");
-            prop.setProperty("Projectid", "windy-skyline-394706");
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try {
+            prop.setProperty("ProjectId", "windy-skyline-394706");
             return DriverManager.getConnection("jdbc:googlebigquery:", prop);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
-    
-    public List<List<String[]>> buildSql(Map<String, List<String>> dataList) throws SQLException {
-        List<List<String[]>> rowList = new ArrayList<List<String[]>>();
-        Connection conn = getConnection();
-        Statement statement = conn.createStatement();
-        System.out.println("Field List Generate Start!");
+
+    @SuppressWarnings("resource")
+    public Map<String, String> buildSql(Map<String, List<String>> dataList) throws SQLException {
+        System.out.print("Do you want to import sample data only? (Y | N) : ");
+        Scanner sc = new Scanner(System.in);
+        String str = sc.next();
+        Map<String, String> tableQuery = new HashMap<String, String>();
+        System.out.println("Query Generate Start!");
         dataList.forEach((key, value) -> {
             String field = String.join(",", value);
             StringBuilder query = new StringBuilder();
+
             query.append("SELECT ").append(field).append(" FROM Testing.").append(key);
-            ResultSet result;
-            List<String[]> resultRows = new ArrayList<String[]>();
-            try {
-                result = statement.executeQuery(query.toString());
-                ResultSetMetaData metaData = result.getMetaData();
-                while(result.next()) {
-                    List<String> row = new ArrayList<String>();
-                    for (int i = 0; i < metaData.getColumnCount(); i++) {
-                        row.add(result.getString(i + 1));
-                    }
-                    resultRows.add(row.toArray(new String[0]));
-                }
-                rowList.add(resultRows);
-            } catch (SQLException e) {
-                e.printStackTrace();
+            if (value.contains("_PARTITIONTIME")) {
+                query.append(" WHERE TIMESTAMP_TRUNC(_PARTITIONTIME, DAY) <= TIMESTAMP('2023-08-07')");
             }
-        } );
-        System.out.println("Field List Generate Complete!------");
-        return rowList;
+            if (str.equalsIgnoreCase("Y")) {
+                query.append(" LIMIT 5");
+            }
+            System.out.println(query.toString());
+            tableQuery.put(key, query.toString());
+        });
+        System.out.println("Query Generate Complete!------");
+        System.out.println("_______________________________________");
+        return tableQuery;
     }
 }
